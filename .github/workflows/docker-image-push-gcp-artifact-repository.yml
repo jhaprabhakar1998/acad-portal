@@ -1,0 +1,55 @@
+name: Docker Image CI to push to GCP Artifact registry
+
+on:
+  push:
+    branches: []
+
+# All variables that needs to be configured and changed. Also secrets has to be configured
+env: 
+  PROJECT_ID: developer-playground-419917
+  REGION: asia-south1
+  GAR_LOCATION: asia-south1-docker.pkg.dev/developer-playground-419917/developer-playground-docker-registry/
+  DOCKER_IMAGE_TAG: generic-node-service
+  DOCKERFILE: Dockerfile
+
+# INFO: One good thing with docker image is that docker manages all images  by itself and hence we don't have
+# to specifically find the location where that image is saved. For pushing to private repository, you just add private
+# artifact registry host in beginning of your image
+# This job uses one secret to access Google cloud artifact registry GOOGLE_ARTIFACT_REGISTRY_SERVICE_ACCOUNT_KEY 
+jobs:
+
+  build-and-push-artifact-gcp:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Declare some variables
+      shell: bash
+      run: |
+        echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+    
+    - id: "auth"
+      uses: "google-github-actions/auth@v1"
+      with:
+        credentials_json: "${{ secrets.GOOGLE_ARTIFACT_REGISTRY_SERVICE_ACCOUNT_KEY }}"
+
+    - name: "Set up Cloud SDK"
+      uses: "google-github-actions/setup-gcloud@v1"
+
+    - name: "Use gcloud CLI"
+      run: "gcloud info"
+    
+    - name: Docker Details
+      run: docker --version
+
+    - name: "Docker auth"
+      run: |-
+        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+    - name: Build the Docker image
+      run: docker build . --file ${{env.DOCKERFILE}} --tag ${{env.GAR_LOCATION}}${{env.DOCKER_IMAGE_TAG}}:${{env.sha_short}}
+
+    - name: Push image
+      run: docker push ${{env.GAR_LOCATION}}${{env.DOCKER_IMAGE_TAG}}:${{env.sha_short}}

@@ -1,0 +1,38 @@
+name: Check that build and tests are passing
+
+on:
+  push:
+    branches: [ ]
+  pull_request:
+    branches: [ ]
+
+# INFO: One good thing with docker image is that docker manages all images  by itself and hence we don't have
+# to specifically find the location where that image is saved. For pushing to private repository, you just add private
+# artifact registry host in beginning of your image
+# This job uses one secret to access Google cloud artifact registry GOOGLE_ARTIFACT_REGISTRY_SERVICE_ACCOUNT_KEY 
+jobs:
+
+  build-and-test-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Using project specific node version from .nvmrc file
+    - name: Setup Node environment
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+
+    - name: Check node and npm version
+      run: node --version && npm --version
+
+    - name: Install dependencies 
+      run: npm i
+
+    - name: Build project
+      run: npm run build
+
+    - name: Test Project
+      run: npm run test
