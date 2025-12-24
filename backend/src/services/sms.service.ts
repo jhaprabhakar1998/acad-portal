@@ -36,15 +36,14 @@ class SmsService {
    */
   async sendOtp(mobileNumber: string, otp: string): Promise<SmsResponse> {
     try {
-      // Remove country code if present, ensure 10 digits
-      const cleanMobile = mobileNumber.replace(/^91/, '').replace(/^\+91/, '');
-      
-      if (cleanMobile.length !== 10) {
+      if (!this.isValidMobileNumber(mobileNumber)) {
         return {
           success: false,
           error: 'Invalid mobile number format',
         };
       }
+      
+      const cleanMobile = this.cleanMobileNumber(mobileNumber);
 
       // Add country code
       const phoneWithCountryCode = `91${cleanMobile}`;
@@ -116,6 +115,25 @@ class SmsService {
     const isValid = /^[6-9]\d{9}$/.test(cleanMobile);
     return isValid;
   }
+
+  cleanMobileNumber(mobileNumber: string): string {
+    
+    if (mobileNumber.startsWith('+') && !mobileNumber.startsWith('+91')) {
+      console.log('Rejected: Foreign country code detected.');
+      return '';
+    }
+  
+    // Removes '+91' or a leading '91' (only if the '91' is followed by a 10-digit format)
+    let cleanMobile = mobileNumber.replace(/^\+91/, '');
+    
+    // Only remove leading '91' if the remaining string would be 10 digits
+    if (cleanMobile.startsWith('91') && cleanMobile.length === 12) {
+      console.log('Removing leading 91');
+      cleanMobile = cleanMobile.substring(2);
+    }
+    return cleanMobile;
+  }
+
 }
 
 const smsService = new SmsService();
