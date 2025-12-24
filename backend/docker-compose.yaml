@@ -11,11 +11,9 @@ services:
     ports:
       - '3306:3306'
     environment:
-      # Use this to allow root with NO password
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - MYSQL_DATABASE=vmc_student_portal
     volumes:
-      - ./db-setup:/docker-entrypoint-initdb.d
-
-volumes:
-  mysql_data:
+      # Keep this: It mounts your scripts to be run ONCE at startup
+      - ./db-setup:/docker-entrypoint-initdb.d:ro
+    # No "volumes" mapping to /var/lib/mysql here = ephemeral data
