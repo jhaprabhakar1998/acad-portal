@@ -1,7 +1,22 @@
-version: '3'
 services:
-  mongodb:
-    image: 'mongo'
-    container_name: mongodb
+  # mongodb:
+  #   image: 'mongo'
+  #   container_name: mongodb
+  #   ports:
+  #     - '27017:27017'
+
+  mysql:
+    image: 'mysql:8.0'
+    container_name: mysql
     ports:
-      - '27017:27017'
+      - '3306:3306'
+    environment:
+      # Use this to allow root with NO password
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=vmc_student_portal
+    volumes:
+      - ./db-setup:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
