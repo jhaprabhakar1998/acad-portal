@@ -94,12 +94,31 @@ class SmsService {
    * @returns boolean
    */
   isValidMobileNumber(mobileNumber: string): boolean {
-    const cleanMobile = mobileNumber.replace(/^91/, '').replace(/^\+91/, '');
-    return /^[6-9]\d{9}$/.test(cleanMobile); // Indian mobile number format
+    // 1. Check for foreign country codes
+    // If it starts with '+' but NOT '+91', it's a foreign number
+    if (mobileNumber.startsWith('+') && !mobileNumber.startsWith('+91')) {
+      console.log('Rejected: Foreign country code detected.');
+      return false;
+    }
+  
+    // 2. Clean the Indian prefix
+    // Removes '+91' or a leading '91' (only if the '91' is followed by a 10-digit format)
+    let cleanMobile = mobileNumber.replace(/^\+91/, '');
+    
+    // Only remove leading '91' if the remaining string would be 10 digits
+    if (cleanMobile.startsWith('91') && cleanMobile.length === 12) {
+      console.log('Removing leading 91');
+      cleanMobile = cleanMobile.substring(2);
+    }
+  
+    // 3. Final Validation
+    // Ensures exactly 10 digits starting with 6-9
+    const isValid = /^[6-9]\d{9}$/.test(cleanMobile);
+    return isValid;
   }
 }
 
 const smsService = new SmsService();
 export default smsService;
-module.exports = smsService;
+module.exports = {smsService};
 

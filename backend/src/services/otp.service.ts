@@ -4,7 +4,7 @@
  */
 
 const { getDatabase } = require('../database');
-const smsService = require('./sms.service').default;
+const { smsService } = require('./sms.service');
 
 interface OtpRecord {
   id: number;
@@ -104,7 +104,8 @@ class OtpService {
   async sendOtp(rollNumber: string, mobileNumber: string): Promise<OtpResult> {
     try {
       // Validate mobile number
-      if (!smsService.isValidMobileNumber(mobileNumber)) {
+      if (!smsService?.isValidMobileNumber(mobileNumber)) {
+        console.log('Invalid mobile number format');
         return {
           success: false,
           error: 'Invalid mobile number format',
