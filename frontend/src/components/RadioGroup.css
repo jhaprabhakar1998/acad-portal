@@ -1,0 +1,17 @@
+.radio-group {
+  display: grid;
+  gap: 12px;
+}
+
+.radio-group__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.radio-group__options {
+  display: grid;
+  gap: 12px;
+}
+

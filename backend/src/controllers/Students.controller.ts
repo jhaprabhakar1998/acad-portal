@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 const _ = require('lodash');
 const StudentModel = require('@/models/Students');
 const { getDatabase } = require('@/database');
+const otpService = require('../services/otp.service');
 
 function deleteUnwantedKeys(data: any[]) {
     const filteredData = data.map((student: any) => {
@@ -108,6 +109,117 @@ export default {
 
         } catch (error: any) {
             console.error('Error in getMobileForOtp:', error);
+            next(error);
+        }
+    },
+
+    /**
+     * Send OTP to mobile number
+     * This method generates and sends OTP to the selected mobile number
+     * 
+     * @route POST /api/v1/students/send-otp
+     * @body {roll_number: string, mobile_number: string}
+     */
+    async sendOtp(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roll_number, mobile_number } = req.body;
+
+            if (!roll_number || !mobile_number) {
+                return res.status(400).json({
+                    msg: 'Roll number and mobile number are required',
+                    errcode: 1
+                });
+            }
+
+            // Verify that the mobile number belongs to this roll number
+            const db = getDatabase('vmcTest');
+            const [students] = await db.query(
+                'SELECT id FROM student WHERE roll_number = ? AND (phone_number = ? OR guardian_phone_number = ? OR father_no = ? OR mother_no = ?) LIMIT 1',
+                [roll_number, mobile_number, mobile_number, mobile_number, mobile_number]
+            );
+
+            if (!Array.isArray(students) || students.length === 0) {
+                return res.status(200).json({
+                    msg: 'Mobile number does not belong to this roll number',
+                    errcode: 1
+                });
+            }
+
+            // Send OTP
+            const result = await otpService.sendOtp(roll_number, mobile_number);
+
+            if (!result.success) {
+                return res.status(200).json({
+                    msg: result.error || 'Failed to send OTP',
+                    errcode: 1
+                });
+            }
+
+            return res.status(200).json({
+                msg: result.message || 'OTP sent successfully',
+                errcode: 0
+            });
+
+        } catch (error: any) {
+            console.error('Error in sendOtp:', error);
+            next(error);
+        }
+    },
+
+    /**
+     * Verify OTP and create session
+     * This method verifies the OTP and creates a user session
+     * 
+     * @route POST /api/v1/students/verify-otp
+     * @body {roll_number: string, mobile_number: string, otp: string}
+     */
+    async verifyOtp(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roll_number, mobile_number, otp } = req.body;
+
+            if (!roll_number || !mobile_number || !otp) {
+                return res.status(400).json({
+                    msg: 'Roll number, mobile number, and OTP are required',
+                    errcode: 1
+                });
+            }
+
+            // Verify OTP
+            const result = await otpService.verifyOtp(roll_number, mobile_number, otp);
+
+            if (!result.success) {
+                return res.status(200).json({
+                    msg: result.error || 'OTP verification failed',
+                    errcode: 1
+                });
+            }
+
+            // Fetch student from database
+            const db = getDatabase('vmcTest');
+            const [students] = await db.query(
+                'SELECT * FROM student WHERE roll_number = ? LIMIT 1',
+                [roll_number]
+            );
+
+            if (!Array.isArray(students) || students.length === 0) {
+                return res.status(200).json({
+                    msg: 'Student not found',
+                    errcode: 1
+                });
+            }
+
+            const student = students[0];
+
+            // Create session (stored in req.session by express-session middleware)
+            (req.session as any)._user = student;
+
+            return res.status(200).json({
+                msg: 'OTP Verified, Thanks',
+                errcode: 0
+            });
+
+        } catch (error: any) {
+            console.error('Error in verifyOtp:', error);
             next(error);
         }
     },

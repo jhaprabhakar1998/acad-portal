@@ -1,0 +1,73 @@
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: #ffffff;
+  position: relative;
+}
+
+.radio:hover {
+  border-color: #f0b429;
+  background: rgba(240, 180, 41, 0.05);
+}
+
+.radio__input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 0;
+  height: 0;
+}
+
+.radio__checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  position: relative;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.radio__input:checked ~ .radio__checkmark {
+  border-color: #f0b429;
+  background: #f0b429;
+}
+
+.radio__input:checked ~ .radio__checkmark::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1d1b16;
+}
+
+.radio__input:checked ~ .radio__label {
+  color: #171717;
+  font-weight: 600;
+}
+
+.radio__input:disabled ~ .radio__checkmark,
+.radio__input:disabled ~ .radio__label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.radio__label {
+  flex: 1;
+  font-size: 15px;
+  color: #374151;
+  user-select: none;
+}
+
+/* Radio group styles moved to RadioGroup.css */
+

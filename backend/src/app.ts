@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import compression from 'compression';
 import HealthCheckMiddleware from './middlewares/HealthCheck.middleware';
+import { configureSession } from './middlewares/session.middleware';
 
 const { connectToDatabase, testAllConnections, getConnectedDatabases } = require('@/database');
 
@@ -21,13 +22,22 @@ class App {
     private config(): void {
         this.app.set('port', process.env.PORT || 3000);
         this.app.use(compression());
-        this.app.use(cors());
+        
+        // Configure CORS with credentials for session cookies
+        this.app.use(cors({
+            origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+            credentials: true
+        }));
+        
         this.app.use(express.json({ limit: process.env.PAYLOAD_SIZE }));
         this.app.use(express.urlencoded({ extended: true, limit: process.env.PAYLOAD_SIZE }));
         this.app.use(express.text({ type: 'text/plain', limit: process.env.PAYLOAD_SIZE }));
     }
 
-    private setupMiddleware(): void {}
+    private setupMiddleware(): void {
+        // Configure session middleware (must be before routes)
+        configureSession(this.app);
+    }
 
     private setupRouter(): void {
         this.app = routes.setupRoutes(this.app);

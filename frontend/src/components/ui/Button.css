@@ -1,0 +1,77 @@
+.btn {
+  height: 46px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--full-width {
+  width: 100%;
+}
+
+/* Primary Variant */
+.btn--primary {
+  background: linear-gradient(90deg, #f0b429, #d99e26);
+  color: #1d1b16;
+  box-shadow: 0 10px 25px rgba(240, 180, 41, 0.25);
+}
+
+.btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow: 0 12px 30px rgba(240, 180, 41, 0.3);
+}
+
+.btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(240, 180, 41, 0.2);
+}
+
+/* Secondary Variant */
+.btn--secondary {
+  background: #1a1a1f;
+  color: #f9fafb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: #222228;
+  transform: translateY(-1px);
+}
+
+/* Outline Variant */
+.btn--outline {
+  background: transparent;
+  color: #f0b429;
+  border: 2px solid #f0b429;
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: rgba(240, 180, 41, 0.1);
+}
+
+/* Ghost Variant */
+.btn--ghost {
+  background: transparent;
+  color: #6b7280;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #171717;
+}
+
