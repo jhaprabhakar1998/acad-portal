@@ -8,6 +8,7 @@
     "serve": "node dist/server.js",
     "dev": "run-p *:serve",
     "db:serve": "docker compose up -d",
+    "db:down": "docker compose down",
     "server:serve": "nodemon --inspect src/server.ts",
     "build": "npm run build:ts",
     "build:ts": "tsc",
