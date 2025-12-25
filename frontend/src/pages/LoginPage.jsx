@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Input, Card } from '../components/ui';
 import Logo from '../components/Logo';
 import RadioGroup from '../components/RadioGroup';
+import OtpModal from '../components/OtpModal';
 import { studentApi } from '../services/api';
 import { parsePhoneNumbers } from '../utils/htmlParser';
 import './LoginPage.css';
@@ -11,12 +13,18 @@ import './LoginPage.css';
  * Handles student/parent login with OTP flow
  */
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [rollNumber, setRollNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [phoneNumbers, setPhoneNumbers] = useState([]);
   const [selectedPhone, setSelectedPhone] = useState('');
   const [rollNumberSubmitted, setRollNumberSubmitted] = useState(false);
+  
+  // OTP Modal state
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
 
   /**
    * Handle roll number submission
@@ -65,15 +73,71 @@ const LoginPage = () => {
   /**
    * Handle OTP send
    */
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!selectedPhone) {
       setError('Please select a phone number');
       return;
     }
 
-    // TODO: Implement OTP sending logic
-    console.log('Sending OTP to:', selectedPhone);
-    alert(`OTP will be sent to ${selectedPhone}`);
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await studentApi.sendOtp(rollNumber, selectedPhone);
+
+      if (response.errcode === 0) {
+        // Open OTP modal
+        setOtpModalOpen(true);
+        setOtpError('');
+      } else {
+        setError(response.msg || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Handle OTP verification
+   */
+  const handleVerifyOtp = async (otp) => {
+    setOtpError('');
+    setOtpLoading(true);
+
+    try {
+      const response = await studentApi.verifyOtp(rollNumber, selectedPhone, otp);
+
+      if (response.errcode === 0) {
+        // Success - redirect to student profile
+        navigate('/student_profile');
+      } else {
+        setOtpError(response.msg || 'OTP verification failed');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'OTP verification failed. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  /**
+   * Handle resend OTP
+   */
+  const handleResendOtp = async () => {
+    try {
+      const response = await studentApi.sendOtp(rollNumber, selectedPhone);
+      if (response.errcode === 0) {
+        setOtpError('');
+        return Promise.resolve();
+      } else {
+        throw new Error(response.msg || 'Failed to resend OTP');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to resend OTP');
+      return Promise.reject(err);
+    }
   };
 
   /**
@@ -163,13 +227,29 @@ const LoginPage = () => {
                 variant="primary"
                 fullWidth
                 onClick={handleSendOtp}
+                disabled={loading}
                 className="phone-selection__button"
               >
-                Send OTP
+                {loading ? 'Sending...' : 'Send OTP'}
               </Button>
             </div>
           )}
         </Card>
+
+        {/* OTP Verification Modal */}
+        <OtpModal
+          isOpen={otpModalOpen}
+          onClose={() => {
+            setOtpModalOpen(false);
+            setOtpError('');
+          }}
+          onVerify={handleVerifyOtp}
+          onResend={handleResendOtp}
+          rollNumber={rollNumber}
+          mobileNumber={selectedPhone}
+          loading={otpLoading}
+          error={otpError}
+        />
       </div>
     </div>
   );

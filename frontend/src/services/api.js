@@ -17,6 +17,7 @@ class ApiService {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      credentials: 'include', // Include cookies for session management
       ...options,
     };
 
@@ -28,13 +29,12 @@ class ApiService {
       const response = await fetch(url, config);
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.msg || 'An error occurred');
-      }
-      
+      // API returns errcode: 0 for success, errcode: 1 for error
+      // Always return data, let caller check errcode
       return data;
     } catch (error) {
-      throw error;
+      // Network or parsing error
+      throw new Error(error.message || 'Network error occurred');
     }
   }
 
@@ -56,6 +56,23 @@ export const studentApi = {
   getMobileForOtp: async (rollNumber) => {
     const api = new ApiService(API_BASE_URL);
     return api.post('/students/get-mobile-for-otp', { roll_number: rollNumber });
+  },
+
+  sendOtp: async (rollNumber, mobileNumber) => {
+    const api = new ApiService(API_BASE_URL);
+    return api.post('/students/send-otp', {
+      roll_number: rollNumber,
+      mobile_number: mobileNumber,
+    });
+  },
+
+  verifyOtp: async (rollNumber, mobileNumber, otp) => {
+    const api = new ApiService(API_BASE_URL);
+    return api.post('/students/verify-otp', {
+      roll_number: rollNumber,
+      mobile_number: mobileNumber,
+      otp: otp,
+    });
   },
 };
 
